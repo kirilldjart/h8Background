@@ -9,10 +9,10 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 
 public class MyService extends Service {
 
-    Handler mServiceHandler = new Handler();
     MyWorkerThread mWorkerThread;
     boolean isDestroyed;
 
@@ -24,28 +24,18 @@ public class MyService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-    // @Override
-    // public IBinder onBind(Intent intent) {
-    // TODO: Return the communication channel to the service.
-    //throw new UnsupportedOperationException("Not yet implemented");
-    //  }
 
-    public static void startServiceWork(Context context, ServiceConnection sConn) {
+
+    public static void startServiceWork(Context context) {
         Intent intent = new Intent(context, MyService.class);
-        //intent.setAction(ACTION_FOO);
-        //  intent.putExtra(EXTRA_PARAM1, param1);
-        //intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
-        //Перенести в OnCreate of Activity
-
-
     }
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Message msg = mServiceHandler.obtainMessage();
-        msg.arg1 = startId;
+        //  Message msg = mServiceHandler.obtainMessage(); Alternative way
+        // msg.arg1 = startId;
 
         //---------HandlerThread
         Runnable task = new Runnable() {
@@ -55,32 +45,39 @@ public class MyService extends Service {
                 try {
                     for (int i = 0; i < 100 && !isDestroyed; i++) {
                         Thread.sleep(100);
-                        // notifyUI();
+                        notifyUI(i);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-            } };
+            }
+        };
 
-       if (mWorkerThread==null) {
-           mWorkerThread = new MyWorkerThread("myWorkerThread");
-           mWorkerThread.start();
-           mWorkerThread.prepareHandler();
-           mWorkerThread.postTask(task);
-       }
-        //--------
-       // mServiceHandler.sendMessage(msg);
-       mWorkerThread.send(msg);
-       mWorkerThread.postTask(task);
+        if (mWorkerThread == null) {
+            mWorkerThread = new MyWorkerThread("myWorkerThread");
+            mWorkerThread.start();
+            mWorkerThread.prepareHandler();
+        }
+        //--------Alternative WAY:
+        // mWorkerThread.send(msg);
+        mWorkerThread.postTask(task);
+
+        return START_STICKY;
+    }
 
 
-       return START_STICKY;
+    public void notifyUI(int progress) {
+        Intent intent = new Intent(MainActivity.BROADCAST_ACTION);
+        intent.putExtra(MainActivity.PARAM_PROGRESS, progress);
+        // Send local broadcast
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
     }
 
 
     @Override
     public void onDestroy() {
-        mWorkerThread.quit();
+        mWorkerThread.quit();  // обязательно убить поток!
         super.onDestroy();
     }
 
@@ -95,18 +92,26 @@ public class MyService extends Service {
         public void postTask(Runnable task) {
             mWorkerHandler.post(task);
         }
-        //My own realization
-        public void send(Message msg){
-            mWorkerHandler.sendMessage(msg);
-          //  mWorkerHandler.handleMessage(msg){
-           //                 };
-        }
-
 
         public void prepareHandler() {
             mWorkerHandler = new Handler(getLooper());
         }
+/*----------------Alternative way of sending msg ------
+        //My own realization
+        public void send(Message msg){
+            mWorkerHandler.sendMessage(msg);
+        }
+          public class MyHandler extends Handler {
+              @Override
+              public void handleMessage(Message msg) {
+                 // Thread.sleep();....
+                  super.handleMessage(msg);
+              }
+         }        */
+
+
     }
+
 
 }
 

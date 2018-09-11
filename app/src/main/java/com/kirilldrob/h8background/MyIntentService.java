@@ -3,14 +3,9 @@ package com.kirilldrob.h8background;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
- */
 public class MyIntentService extends IntentService {
     boolean isDestroyed;
 
@@ -18,66 +13,41 @@ public class MyIntentService extends IntentService {
         super("MyIntentService");
     }
 
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
+
+
     public static void startServiceWork(Context context) {
         Intent intent = new Intent(context, MyIntentService.class);
-        //intent.setAction(ACTION_FOO);
-      //  intent.putExtra(EXTRA_PARAM1, param1);
-        //intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
     }
 
-
-
     @Override
     protected void onHandleIntent(Intent intent) {
-//        if (intent != null) {
-//            final String action = intent.getAction();
-//            if (ACTION_FOO.equals(action)) {
-//                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-//                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-//                handleActionFoo(param1, param2);
-//            } else if (ACTION_BAZ.equals(action)) {
-//                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-//                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-//                handleActionBaz(param1, param2);
-//            }
+
         showToast("Starting Intent Service");
 
-try {
+        try {
+            for (int i = 0; i < 100 && !isDestroyed; i++) {
+                Thread.sleep(100);
+                notifyUI(i);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
-    for (int i = 0; i < 100 && !isDestroyed; i++) {
-        Thread.sleep(100);
-        notifyUI();
+    public void showToast(String str) {
+        Toast.makeText(this, str, Toast.LENGTH_SHORT);
+
+    }
+
+    public void notifyUI(int progress) {
+
+        Intent intent = new Intent(MainActivity.BROADCAST_ACTION);
+        intent.putExtra(MainActivity.PARAM_PROGRESS, progress);
+        // Send local broadcast
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
     }
 
 
-}catch (InterruptedException e){
-    Thread.currentThread().interrupt();
-}
-    }
-
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
 }
