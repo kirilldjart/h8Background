@@ -36,7 +36,7 @@ public class MyIntentService extends IntentService {
     }
 
     public void showToast(String str) {
-        Toast.makeText(this, str, Toast.LENGTH_SHORT);
+        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
 
     }
 
