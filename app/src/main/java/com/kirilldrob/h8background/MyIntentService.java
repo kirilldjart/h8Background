@@ -3,6 +3,8 @@ package com.kirilldrob.h8background;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
@@ -33,12 +35,25 @@ public class MyIntentService extends IntentService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        showToast("Finishing IntentService");
     }
 
-    public void showToast(String str) {
-        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
 
+    public void showToast(final String message) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                Toast.makeText(MyIntentService.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
+    //
+
+
+
 
     public void notifyUI(int progress) {
 
